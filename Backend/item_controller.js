@@ -3,6 +3,7 @@ import { Item } from "./item_schema.js";
 import { ReturnItem } from "./return_schema.js";
 import { Issued } from "./total_schem.js";
 import mongoose from "mongoose";
+import { Duplicated } from "./duplicate_item.js";
 import { User } from "./user.model.js";
 
 function getDate() {
@@ -113,6 +114,13 @@ export const addTotal = async (req, res) => {
         item_id: itemId,
         userID: userId,
       });
+      const issued2 = await Duplicated.create({
+        _id: new mongoose.Types.ObjectId(),
+        quantity: quantity,
+        item_id: itemId,
+        userID: userId,
+      });
+
       const item = await Item.findOne({ item_id: itemId });
 
       const name = item.itemName;
@@ -168,7 +176,7 @@ export const addTotal = async (req, res) => {
         if (!updatedIssuedItem || updatedIssuedItem.quantity === quantity) {
           await Issued.deleteMany({ userID: userId });
           console.log(
-            `Issued documents for userId ${userId} deleted after 10 minutes`
+            `Issued documents for userId ${userId} deleted after 2 minutes`
           );
 
           // Calculate the updated quantity for the Item collection
@@ -181,7 +189,7 @@ export const addTotal = async (req, res) => {
             { item_id: itemId },
             { quantity: updatedItemQuantity }
           );
-          console.log("Item quantity updated after 10 minutes");
+          console.log("Item quantity updated after  minutes");
         }
       } catch (error) {
         console.error(
@@ -189,10 +197,7 @@ export const addTotal = async (req, res) => {
           error
         );
       }
-    }, 200 * 10 * 60);
-
-    // // Ensure clearTimeout is called if changes are made before timeout
-    // clearTimeout(timeout);
+    }, 10 * 60 * 1000);
   } catch (error) {
     console.error("Error issuing item:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -250,14 +255,14 @@ export const verifyUID = async (req, res) => {
 };
 
 export const see = async (req, res) => {
-  const userID = req.query.userID;
+  const { userID } = req.query;
   console.log("USERID", userID);
 
   if (!userID) {
     console.log("No user id");
     res.status(400).json("Provide a user id");
   } else {
-    const user = await User.findOne({ userID: userID });
+    const user = await Issued.findOne({ userID: userID });
 
     const issuedItems = user.itemsTakenFromWebsite;
 
@@ -347,7 +352,7 @@ export const invalid = async (req, res) => {
           { item_id: itemID },
           { $set: { quantity: newquantity.quantity } }
         );
-        await Issued.deleteOne({ userID: userID, item_id: itemID });
+        await Issued.deleteOne({ userID: userID });
 
         console.log(`ItemID: ${itemID} processed successfully.`);
       } else {
@@ -391,5 +396,157 @@ export const invalid = async (req, res) => {
     console.error("Error during processing items:", error);
 
     return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// export const issueItem = async (req, res) => {
+//   const { userId, itemId, quantity } = req.body;
+
+//     const user = await User.findOne({ userID: userId });
+//     const itemsTakenByUser = user.itemsTakenFromWebsite;
+
+//     try {
+//       // Check if the item exists
+//       const foundItem = await Item.findOne({ item_id: itemId });
+
+//       if (!foundItem) {
+//         return res.status(404).json({
+//           message: "Item not found",
+//         });
+//       }
+
+//       let updatedQuantity = 0;
+
+//       // store current value before any changes
+//       const previousItemQuantity = foundItem.quantity;
+//       console.log("previous", previousItemQuantity);
+
+//       // Check if there is an existing entry for the user and item
+//       const existingIssuedItem = await Issued.findOne({
+//         item_id: itemId,
+//         userID: userId,
+//       });
+
+//       if (existingIssuedItem) {
+//         // Update quantity if item is already issued
+//         updatedQuantity = existingIssuedItem.quantity + quantity;
+
+//         // Update the existing entry in the Issued database
+//         await Issued.findOneAndUpdate(
+//           { item_id: itemId, userID: userId },
+//           { quantity: updatedQuantity }
+//         );
+
+//         const itemToUpdateIndex = itemsTakenByUser.findIndex(
+//           (item) => item.item_id == itemId
+//         );
+
+//         if (itemToUpdateIndex !== -1) {
+//           // Update the quantity and updatedTime of the item
+//           itemsTakenByUser[itemToUpdateIndex].quantity = updatedQuantity;
+//           itemsTakenByUser[itemToUpdateIndex].updatedDate = getDate();
+
+//           // Update the user document in the database with the modified itemsTakenFromWebsite array
+//           await User.findOneAndUpdate(
+//             { userID: userId },
+//             { itemsTakenFromWebsite: itemsTakenByUser }
+//           );
+//         }
+
+//         res.status(200).json({
+//           status: 200,
+//           message: "Item quantity updated successfully",
+//           updatedQuantity: updatedQuantity,
+//         });
+//       } else {
+//         // Create new database entry
+//         const issued = await Issued.create({
+//           _id: new mongoose.Types.ObjectId(),
+//           quantity: quantity,
+//           item_id: itemId,
+//           userID: userId,
+//         });
+//         const item = await Item.findOne({ item_id: itemId });
+
+//         const name = item.itemName;
+
+//         // Initialize updatedQuantity with the newly issued quantity
+//         updatedQuantity = { quantity: quantity };
+
+//         const itemToUpdateIndex = itemsTakenByUser.findIndex(
+//           (item) => item.item_id == itemId
+//         );
+
+//         if (itemToUpdateIndex !== -1) {
+//           const val = itemsTakenByUser[itemToUpdateIndex].quantity;
+//           const updatedQuantity = Number(val) + Number(quantity);
+
+//           itemsTakenByUser[itemToUpdateIndex].quantity = updatedQuantity;
+//           itemsTakenByUser[itemToUpdateIndex].updatedDate = getDate();
+
+//           await User.findOneAndUpdate(
+//             { userID: userId },
+//             { itemsTakenFromWebsite: itemsTakenByUser }
+//           );
+//         } else {
+//           const itemToAdd = {
+//             item_id: itemId,
+//             itemName: name,
+//             quantity: quantity,
+//             date: getDate(),
+//           };
+
+//           itemsTakenByUser.push(itemToAdd);
+
+//           await User.findOneAndUpdate(
+//             { userID: userId },
+//             { itemsTakenFromWebsite: itemsTakenByUser }
+//           );
+//         }
+
+//         res.status(200).json({
+//           status: 200,
+//           message: "Item issued successfully",
+//           issued: issued,
+//         });
+//       }
+
+//     } catch (error) {
+//       console.error("Error issuing item:", error);
+//       return res.status(500).json({ message: "Internal server error" });
+//     }
+//   };
+
+//   // Save the issued item to the database
+//   const issuedItem = new Issued({
+//     userID: userID,
+//     item_id: item_id,
+//     quantity: quantity,
+//   });
+
+//   try {
+//     const result = await issuedItem.save();
+//     res.status(201).json(result);
+//   } catch (error) {
+//     console.error("Error saving issued item:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+export const getIssuedItems = async (req, res) => {
+  try {
+    const issuedItems = await Duplicated.find();
+    console.log(issuedItems);
+    res.status(200).json(issuedItems);
+  } catch {
+    console.log("Error fetching issued items:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+export const getReturnedItems = async (req, res) => {
+  try {
+    const returnedItems = await ReturnItem.find();
+    res.status(200).json(returnedItems);
+  } catch (error) {
+    console.error("Error fetching returned items:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

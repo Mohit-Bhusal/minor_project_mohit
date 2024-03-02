@@ -47,7 +47,9 @@ const SignInForm = () => {
 
     if (loginResult.message === "success") {
       navigate("/dashboard", { replace: true });
-    }
+    } 
+  
+    
   };
 
   return (
@@ -104,7 +106,7 @@ const SignInForm = () => {
 
         <div>
           <p className="text-gray-800 text-sm">
-            Don't have an account?{" "}
+            Dont have an account?{" "}
             <button
               onClick={() => {
                 navigate("/signup", { replace: true });

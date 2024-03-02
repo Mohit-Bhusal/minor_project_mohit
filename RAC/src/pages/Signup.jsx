@@ -42,6 +42,7 @@ const SignUpForm = () => {
     if (signUpResult.success == true) {
       navigate("/signin", { replace: true });
     }
+    
   };
 
   return (

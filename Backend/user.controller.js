@@ -1,15 +1,15 @@
-import { User } from './user.model.js';
-import { UserID } from './userid_schema.js';
-import { asyncHandler } from './utils/async.js';
-import { ApiError } from './utils/apierror.js';
-import { ApiResponse } from './utils/apiresponse.js';
-import jwt from 'jsonwebtoken';
+import { User } from "./user.model.js";
+import { UserID } from "./userid_schema.js";
+import { asyncHandler } from "./utils/async.js";
+import { ApiError } from "./utils/apierror.js";
+import { ApiResponse } from "./utils/apiresponse.js";
+import jwt from "jsonwebtoken";
 
 const generateAccessAndRefereshTokens = async (_id) => {
   try {
-    console.log('Generating token', _id);
+    console.log("Generating token", _id);
     const user = await User.findById(_id);
-    console.log('T');
+    console.log("T");
 
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
@@ -20,7 +20,7 @@ const generateAccessAndRefereshTokens = async (_id) => {
 
     return { accessToken, refreshToken };
   } catch (error) {
-    console.log('error');
+    console.log("error");
     throw new ApiError(500, error.message);
   }
 };
@@ -32,34 +32,34 @@ const registerUser = asyncHandler(async (req, res) => {
   const existingSignedUpUser = await User.findOne({ userID });
 
   if (!existingUser) {
-    throw new ApiError(404, 'User with this id does not exist');
+    throw new ApiError(404, "User with this id does not exist");
   } else if (existingSignedUpUser) {
-    throw new ApiError(409, 'User with this id already exists');
+    throw new ApiError(409, "User with this id already exists");
   }
 
   try {
     const user = await User.create({
       email,
       password,
-      userID
+      userID,
     });
 
     const createdUser = await User.findById(user._id).select(
-      '-password -refreshToken'
+      "-password -refreshToken"
     );
 
     if (!createdUser) {
       throw new ApiError(
         500,
-        'Something went wrong while registering the user'
+        "Something went wrong while registering the user"
       );
     }
 
     res
       .status(201)
-      .json(new ApiResponse(200, createdUser, 'User registered successfully'));
+      .json(new ApiResponse(200, createdUser, "User registered successfully"));
   } catch (error) {
-    throw new ApiError(500, 'Internal server error');
+    throw new ApiError(500, "Internal server error");
   }
 });
 
@@ -91,21 +91,22 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { userID, password } = req.body;
   console.log(userID);
-  console.log('hii');
+  console.log("hii");
   if (!userID) {
-    throw new ApiError(400, 'userID REQUIRED');
+    throw new ApiError(400, "userID REQUIRED");
   }
 
   const user = await User.findOne({ userID });
   if (!user) {
-    throw new ApiError(404, 'User does not exist');
+    throw new ApiError(404, "User does not exist");
+
   }
 
   const isPasswordValid = await user.isPasswordCorrect(password);
   console.log(isPasswordValid);
 
   if (!isPasswordValid) {
-    throw new ApiError(401, 'Invalid user credentials');
+    throw new ApiError(401, "Invalid user credentials");
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
@@ -113,45 +114,45 @@ const loginUser = asyncHandler(async (req, res) => {
   );
 
   const loggedInUser = await User.findById(user._id).select(
-    '-password -refreshToken'
+    "-password -refreshToken"
   );
 
   return res
     .status(200)
-    .cookie('accessToken', accessToken)
-    .cookie('refreshToken', refreshToken)
+    .cookie("accessToken", accessToken)
+    .cookie("refreshToken", refreshToken)
     .json(
       new ApiResponse(
         200,
         {
           user: loggedInUser,
           accessToken,
-          refreshToken
+          refreshToken,
         },
-        'success'
+        "success"
       )
     );
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  console.log('HERE BACK');
+  console.log("HERE BACK");
   await User.findByIdAndUpdate(
     req.user._id,
     {
       $unset: {
-        refreshToken: 1
-      }
+        refreshToken: 1,
+      },
     },
     {
-      new: true
+      new: true,
     }
   );
 
   return res
     .status(200)
-    .clearCookie('accessToken')
-    .clearCookie('refreshToken')
-    .json(new ApiResponse(200, {}, 'User logged Out'));
+    .clearCookie("accessToken")
+    .clearCookie("refreshToken")
+    .json(new ApiResponse(200, {}, "User logged Out"));
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
@@ -159,7 +160,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     req.cookies.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
-    throw new ApiError(401, 'Unauthorized request');
+    throw new ApiError(401, "Unauthorized request");
   }
 
   try {
@@ -171,11 +172,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     const user = await User.findById(decodedToken?._id);
 
     if (!user) {
-      throw new ApiError(401, 'Invalid refresh token');
+      throw new ApiError(401, "Invalid refresh token");
     }
 
     if (incomingRefreshToken !== user?.refreshToken) {
-      throw new ApiError(401, 'Refresh token is expired or used');
+      throw new ApiError(401, "Refresh token is expired or used");
     }
 
     const { accessToken, newRefreshToken } =
@@ -183,17 +184,17 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .cookie('accessToken', accessToken)
-      .cookie('refreshToken', newRefreshToken)
+      .cookie("accessToken", accessToken)
+      .cookie("refreshToken", newRefreshToken)
       .json(
         new ApiResponse(
           200,
           { accessToken, refreshToken: newRefreshToken },
-          'Access token refreshed'
+          "Access token refreshed"
         )
       );
   } catch (error) {
-    throw new ApiError(401, error?.message || 'Invalid refresh token');
+    throw new ApiError(401, error?.message || "Invalid refresh token");
   }
 });
 
@@ -202,8 +203,8 @@ const getAllUsers = async (req, res) => {
     const users = await User.find();
     res.json(users);
   } catch (error) {
-    console.error('Error fetching IDs:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error fetching IDs:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 

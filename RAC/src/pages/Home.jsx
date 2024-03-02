@@ -8,9 +8,11 @@ const Home = () => {
           RAC
         </h1>
         <p className="text-xl text-center lg:text-start font-medium">
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Iste,
-          voluptatibus. Unde, at? Ipsa laboriosam animi atque provident
-          voluptatum nam inventore vel, ullam, soluta blanditiis culpa.
+        <h2>Dear RAC Club Member,</h2>
+      <p>Welcome to the RAC Inventory Access Request Page. Here, you can request access to our inventory of resources and services tailored to enhance your RAC club experience. Please proceed with your access request below. Should you have any queries or require assistance, feel free to reach out to our dedicated support team, who are here to assist you every step of the way.</p>
+      <p>Warm regards,</p>
+      <p>[RAC President]</p>
+
         </p>
         <button
           className="px-4 py-2 text-lg bg-amber-100 border-yellow-500 border-2 rounded-sm active:scale-95 duration-500 hover:bg-yellow-500 hover:text-white font-semibold"

@@ -112,7 +112,7 @@ const Dashboard = () => {
   return (
     <div className="bg-gray-200 min-h-screen">
       <div className="bg-yellow-500 p-4 flex items-center justify-center">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-white">Inventory</h1>
       </div>
       <div className="container mx-auto mt-4 bg-white p-4 rounded-md shadow-md">
         <form noValidate onSubmit={handleSubmit(onSubmitForm)}>

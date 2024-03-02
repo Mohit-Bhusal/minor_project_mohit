@@ -11,13 +11,12 @@ import ItemRouter from "./items.route.js";
 import express from "express";
 import cors from "cors";
 
-
 const app = express();
 
 app.use(
   cors({
-    origin:"http://localhost:5173",
-    credentials:true
+    origin: "http://localhost:5173",
+    credentials: true,
   })
 );
 
@@ -39,15 +38,21 @@ connectDB().then(() => {
 app.get("/", (req, res) => {
   res.send("Running");
 });
-app.get("/users/signin", (req, res) => {
-  res.send("Running");
-});
+// app.get("/users/signin", (req, res) => {
+//   res.send("Running");
+// });
 
 app.get("/users/verifyUID", (req, res) => {
   res.send("VERIFY UID");
 });
 app.get("/items/addTotal", (req, res) => {
   res.send("working");
+});
+
+
+
+app.get("/new", (req, res) => {
+  res.send("here");
 });
 
 // app.get("/users/getItems", (req, res) => {
@@ -62,4 +67,3 @@ app.use("/items", ItemRouter);
 // app.get("/items/updateQuantity",(req,res)=>{
 //   res.send("hi")
 // })
-

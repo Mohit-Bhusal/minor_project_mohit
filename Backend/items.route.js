@@ -8,6 +8,8 @@ import {
   checked,
   see,
   invalid,
+  getIssuedItems,
+  getReturnedItems
 } from "./item_controller.js";
 
 const ItemRouter = express.Router();
@@ -20,6 +22,9 @@ ItemRouter.route("/verifyUID").post(verifyUID);
 // ItemRouter.route("/taken").post(taken);
 ItemRouter.route("/invalid").post(invalid);
 ItemRouter.route("/see").get(see);
+ItemRouter.route("/ getIssuedItems").get( getIssuedItems);
+ItemRouter.route("/getReturnedItems").get(getReturnedItems);
+
 // ItemRouter.route("/revertQuantities").post(revertQuantities);
 
 export default ItemRouter;
